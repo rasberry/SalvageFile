@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -8,7 +9,7 @@ namespace SalvageFile
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static async Task Main(string[] args)
 		{
 			if (!ParseArgs(args)) {
 				Usage();
@@ -20,7 +21,7 @@ namespace SalvageFile
 			}
 
 			//TODO put a try/catch around this
-			CopyFile(Src,Dest);
+			await CopyFile(Src,Dest);
 		}
 
 		static void Usage()
@@ -57,48 +58,64 @@ namespace SalvageFile
 			return true;
 		}
 
-		const int BucketSize = 100;
-		static void CopyFile(string src, string dst)
+		const int BucketSize = 4*1024;
+		const int MaxQueueItems = 100;
+		static async Task CopyFile(string src, string dst)
 		{
 			int bestFinished = 0;
 			var fatt = new FileInfo(src);
 			long srcLen = fatt.Length;
 			long numBuckets = srcLen / BucketSize;
-			ParallelOptions po = new ParallelOptions {
-				MaxDegreeOfParallelism = 100
-			};
 
-			Parallel.For(0,numBuckets,po,(index) => {
-				long start = index * BucketSize;
-				CopyChunk(src,dst,start,BucketSize);
-				int pct = (int)(100 * index / numBuckets);
-				if (pct > bestFinished) {
-					Interlocked.Exchange(ref bestFinished,pct);
-					Console.WriteLine(pct+"%");
+			var list = new List<Task>();
+			var ilist = new List<long>();
+
+			int index = 0;
+			while(true)
+			{
+				if (index <= numBuckets && list.Count < MaxQueueItems) {
+					long start = index * BucketSize;
+					var copyTask = CopyChunk(src,dst,start,BucketSize);
+
+					list.Add(copyTask);
+					ilist.Add(index);
+					index++;
 				}
-			});
+				else {
+					var done = await Task.WhenAny(list);
+					int which = list.IndexOf(done);
+					int pct = (int)(100 * ilist[which] / (numBuckets+1));
+					if (pct > bestFinished) {
+						bestFinished = pct;
+						Console.WriteLine(pct+"%");
+					}
+					ilist.RemoveAt(which);
+					list.RemoveAt(which);
+				}
+
+				if (list.Count < 1) { break; }
+			}
 		}
 
-		static void CopyChunk(string src, string dst,long start, long size)
+		static async Task CopyChunk(string src, string dst,long start, long size)
 		{
 			var fsrc = File.Open(src,FileMode.Open,FileAccess.Read,FileShare.Read);
 			var fdst = File.Open(dst,FileMode.OpenOrCreate,FileAccess.Write,FileShare.ReadWrite);
 			using(fdst) using(fsrc) {
 				long srcLen = fsrc.Length;
-				long end = (int)Math.Clamp(size,0,srcLen - start + size);
+				int count = (int)(start + size < srcLen ? size : srcLen - start);
+				// Console.WriteLine("D: count = "+count);
 				fsrc.Seek(start,SeekOrigin.Begin);
 				fdst.Seek(start,SeekOrigin.Begin);
 
-				for(long i=0; i<end; i++) {
-					int b = 0;
-					try {
-						b = fsrc.ReadByte();
-					} catch(IOException) {
-						Console.WriteLine("Timeout at offset "+(start+i));
-					}
-					b = Math.Clamp(b,0,255);
-					fdst.WriteByte((byte)b);
+				byte[] buff = new byte[count];
+				try {
+					await fsrc.ReadAsync(buff,0,count);
+				} catch(IOException) {
+					Console.WriteLine("Timeout at offset "+start);
 				}
+
+				await fdst.WriteAsync(buff,0,count);
 			}
 		}
 
