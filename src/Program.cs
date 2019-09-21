@@ -44,9 +44,11 @@ namespace SalvageFile
 			var list = new List<Task>();
 			var ilist = new List<long>();
 
+			//setup a rolling queue
 			int index = 0;
 			while(true)
 			{
+				//fill up the queue if there are spots open
 				if (index <= numBuckets && list.Count < MaxQueueItems) {
 					long start = index * bucketSize;
 					var copyTask = CopyChunk(src,dst,start,bucketSize);
@@ -55,6 +57,7 @@ namespace SalvageFile
 					ilist.Add(index);
 					index++;
 				}
+				//when full, wait for queue to drain at least one item
 				else {
 					var done = await Task.WhenAny(list);
 					int which = list.IndexOf(done);
@@ -68,6 +71,7 @@ namespace SalvageFile
 			}
 		}
 
+		//the filesystem must support seeking for this to work (most do)
 		static async Task CopyChunk(string src, string dst,long start, long size)
 		{
 			var fsrc = File.Open(src,FileMode.Open,FileAccess.Read,FileShare.Read);

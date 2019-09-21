@@ -14,3 +14,7 @@ Usage: SalvageFile [options] (source) (destination)
  -q                Print errors only and suppress copy warning messages
  -h / --help       Print this help
 ```
+
+## TODO ##
+* Test source and destination filesystem for seek support (currently just throws an exception)
+* Check if destination file already exists and prompt for overwrite

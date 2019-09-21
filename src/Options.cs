@@ -63,7 +63,6 @@ namespace SalvageFile
 				Log.Error("Cannot find "+Source);
 				return false;
 			}
-			//TODO check if destination file already exists and prompt for overwrite
 
 			return true;
 		}
