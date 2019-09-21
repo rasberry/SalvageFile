@@ -2,6 +2,7 @@
 A utility for copying as much of a file as possible.
 
 This program tries to copy all the chunks of a file. Any chunks that fail are replaced with zeros.
+*Note:* I've seen that sometimes using a smaller buffer (-b) results in worse recovery, so you may need to play with the setting to achieve best results.
 
 ## Usage ##
 ```
