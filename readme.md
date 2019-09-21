@@ -18,6 +18,29 @@ Usage: SalvageFile [options] (source) (destination)
 * This program uses the regular [System.IO.File](https://referencesource.microsoft.com/#mscorlib/system/io/file.cs) class to read / write files
 * The source and destination file systems must support seeking (most do).
 
+## Build ##
+* Install dotnet. see [Get started](https://docs.microsoft.com/en-us/dotnet/core/get-started)
+* Build with ```dotnet build -p src```
+
+### Native Build ###
+* Follow the [CoreRT - build prerequesites](https://github.com/dotnet/corert/blob/ebfbbcd99fac1746a8489a393a4873800c470ef3/Documentation/prerequisites-for-building.md)
+* Build with ```./make.sh publish```
+
+#### Linux ####
+1. Install dotnet [on linux](https://docs.microsoft.com/en-us/dotnet/core/linux-prerequisites?tabs=netcore2x)
+2. run ```./make.sh publish```
+
+#### Windows ####
+* Using Visual Studio
+  1. Launch the "x64 Native Tools Command Prompt for VS" command prompt
+  2. Use [msys](http://mingw.org/wiki/msys) bash to execute ```./make.sh publish```
+* I've also had success using [cmder](https://cmder.net/) which comes with bash
+* Installing dotnet on [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) is rummored to work as well
+
+#### Mac Os-X ####
+* I don't have a Mac currently - TBD
+* Presumably this is similar to linux. see [Prerequisites for macOS](https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x)
+
 ## TODO ##
 * Test source and destination filesystem for seek support (currently just throws an exception)
 * Check if destination file already exists and prompt for overwrite
