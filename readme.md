@@ -3,13 +3,25 @@ A utility for copying as much of a file as possible.
 
 ## Usage ##
 ```
-Usage: SalvageFile [options] (source) (destination)
- Copies as much of a file as possible.
- Options:
- -b (number)       Size of byte buffer in bytes (default: 4096). Larger values can be used to speed up the copy process but at reduced accuracy
- -v                Print more information including % complete
- -q                Print errors only and suppress copy warning messages
+Usage: SalvageFile (action)
+ Common Options:
  -h / --help       Print this help
+
+ (s)alvage (source) (destination)
+ Copies as much of a file as possible.
+  Options:
+  -b (number)       Size of byte buffer in bytes (default: 4096). Larger values can be used to speed up the copy proces
+   s but at reduced accuracy
+  -v                Print more information including % complete
+  -q                Print errors only and suppress copy warning messages
+
+ (d)iff (file one) (file two)
+ Compares the blocks of each file and shows if they are different
+  Options:
+  -b (number)       Size blocks in bytes (default: 4096)
+  -v                Show all block hashes
+  -q                Only show blocks that differ
+
 ```
 ## Notes ##
 * This program tries to copy all the chunks of a file. Any chunks that fail are replaced with zeros.
@@ -45,3 +57,7 @@ Usage: SalvageFile [options] (source) (destination)
 * Test source and destination filesystem for seek support (currently just throws an exception)
 * Check if destination file already exists and prompt for overwrite
 * Consider implementing a sequential read option to allow reading non-seekable filesystems
+* Add a way to diff copies of a recovered file and see which chunks are different
+  * maybe show % amount of 0's in the chunk
+* Maybe make a chunk 'merge' tool where you select which chunks to keep from each file
+* output which chunks were replaced with 0's
